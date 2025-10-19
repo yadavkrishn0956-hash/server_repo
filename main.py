@@ -63,24 +63,24 @@ app.include_router(generator_router)
 app.include_router(marketplace_router)
 app.include_router(transactions_router)
 
-# Initialize sample data on startup
-@app.on_event("startup")
-async def startup_event():
-    """Initialize sample datasets if none exist"""
-    from services.ipfs_mimic import ipfs
-    
-    # Check if we already have datasets
-    existing_cids = ipfs.list_all_cids()
-    
-    if len(existing_cids) == 0:
-        print("📦 No datasets found. Initializing sample data...")
-        try:
-            from init_sample_data import create_sample_datasets
-            create_sample_datasets()
-        except Exception as e:
-            print(f"⚠️  Failed to initialize sample data: {str(e)}")
-    else:
-        print(f"✅ Found {len(existing_cids)} existing datasets")
+# Initialize sample data on startup - DISABLED FOR VERCEL
+# @app.on_event("startup")
+# async def startup_event():
+#     """Initialize sample datasets if none exist"""
+#     from services.ipfs_mimic import ipfs
+#     
+#     # Check if we already have datasets
+#     existing_cids = ipfs.list_all_cids()
+#     
+#     if len(existing_cids) == 0:
+#         print("📦 No datasets found. Initializing sample data...")
+#         try:
+#             from init_sample_data import create_sample_datasets
+#             create_sample_datasets()
+#         except Exception as e:
+#             print(f"⚠️  Failed to initialize sample data: {str(e)}")
+#     else:
+#         print(f"✅ Found {len(existing_cids)} existing datasets")
 
 if __name__ == "__main__":
     import uvicorn
