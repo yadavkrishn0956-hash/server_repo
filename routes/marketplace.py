@@ -100,6 +100,42 @@ async def list_datasets(
         # Get all CIDs
         all_cids = ipfs.list_all_cids()
         
+        # If no datasets exist, use seed data
+        if not all_cids:
+            from seed_data import get_seed_datasets
+            seed_datasets = get_seed_datasets()
+            
+            # Apply filters to seed data
+            filtered_datasets = []
+            for dataset in seed_datasets:
+                if category and dataset.get("category", "").lower() != category.lower():
+                    continue
+                if min_quality and dataset.get("quality_score", 0) < min_quality:
+                    continue
+                if max_price is not None and dataset.get("price", 0) > max_price:
+                    continue
+                if search:
+                    search_text = f"{dataset.get('title', '')} {dataset.get('description', '')} {' '.join(dataset.get('tags', []))}".lower()
+                    if search.lower() not in search_text:
+                        continue
+                filtered_datasets.append(dataset)
+            
+            # Apply pagination
+            total_count = len(filtered_datasets)
+            paginated_datasets = filtered_datasets[offset:offset + limit]
+            
+            return APIResponse(
+                success=True,
+                message=f"Found {total_count} datasets",
+                data={
+                    "datasets": paginated_datasets,
+                    "total_count": total_count,
+                    "limit": limit,
+                    "offset": offset,
+                    "has_more": offset + limit < total_count
+                }
+            )
+        
         datasets = []
         for cid in all_cids:
             metadata = ipfs.get_metadata(cid)
@@ -166,6 +202,15 @@ async def get_dataset_metadata(cid: str):
     
     try:
         metadata = ipfs.get_metadata(cid)
+        
+        # If not found in IPFS, check seed data
+        if not metadata and cid.startswith("seed"):
+            from seed_data import get_seed_datasets
+            seed_datasets = get_seed_datasets()
+            for dataset in seed_datasets:
+                if dataset["cid"] == cid:
+                    metadata = dataset
+                    break
         
         if not metadata:
             raise HTTPException(status_code=404, detail="Dataset not found")
