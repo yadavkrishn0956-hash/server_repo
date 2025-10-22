@@ -15,5 +15,11 @@
   "env": {
     "PYTHONPATH": ".",
     "STORAGE_PATH": "/tmp/storage"
+  },
+  "functions": {
+    "main.py": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
   }
 }

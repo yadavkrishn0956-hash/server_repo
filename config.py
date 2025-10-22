@@ -21,7 +21,8 @@ MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
 ALLOWED_FILE_TYPES = {".csv", ".json", ".zip"}
 
 # Dataset generation limits
-MAX_ROWS = 100000
-MAX_COLUMNS = 1000
-DEFAULT_ROWS = 1000
+# Reduced for Vercel serverless
+MAX_ROWS = 1000 if os.getenv("VERCEL") else 100000
+MAX_COLUMNS = 50 if os.getenv("VERCEL") else 1000
+DEFAULT_ROWS = 100 if os.getenv("VERCEL") else 1000
 DEFAULT_COLUMNS = 10
