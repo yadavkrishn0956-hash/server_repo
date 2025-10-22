@@ -195,16 +195,12 @@ async def list_datasets(
     """List all available datasets with filtering options"""
     
     try:
-        # Get all CIDs
-        all_cids = ipfs.list_all_cids()
-        
-        # Always use seed data for now (Vercel doesn't persist files)
-        if True:  # Changed from: if not all_cids
-            seed_datasets = get_seed_datasets()
+        # Always return seed data on Vercel (no persistent storage)
+        seed_datasets = get_seed_datasets()
             
-            # Apply filters to seed data
-            filtered_datasets = []
-            for dataset in seed_datasets:
+        # Apply filters to seed data
+        filtered_datasets = []
+        for dataset in seed_datasets:
                 if category and dataset.get("category", "").lower() != category.lower():
                     continue
                 if min_quality and dataset.get("quality_score", 0) < min_quality:
@@ -217,24 +213,27 @@ async def list_datasets(
                         continue
                 filtered_datasets.append(dataset)
             
-            # Apply pagination
-            total_count = len(filtered_datasets)
-            paginated_datasets = filtered_datasets[offset:offset + limit]
-            
-            return APIResponse(
-                success=True,
-                message=f"Found {total_count} datasets",
-                data={
-                    "datasets": paginated_datasets,
-                    "total_count": total_count,
-                    "limit": limit,
-                    "offset": offset,
-                    "has_more": offset + limit < total_count
-                }
-            )
+        # Apply pagination
+        total_count = len(filtered_datasets)
+        paginated_datasets = filtered_datasets[offset:offset + limit]
         
-        datasets = []
-        for cid in all_cids:
+        return APIResponse(
+            success=True,
+            message=f"Found {total_count} datasets",
+            data={
+                "datasets": paginated_datasets,
+                "total_count": total_count,
+                "limit": limit,
+                "offset": offset,
+                "has_more": offset + limit < total_count
+            }
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list datasets: {str(e)}")
+
+# Old code below - keeping for reference but not used
+def _list_datasets_old():
             metadata = ipfs.get_metadata(cid)
             if not metadata:
                 continue
