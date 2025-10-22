@@ -61,6 +61,16 @@ async def download_dataset(cid: str, format: str = "zip", buyer: Optional[str] =
     try:
         # Check if dataset exists
         metadata = dataset_service.ipfs.get_metadata(cid)
+        
+        # If not found in IPFS, check seed data
+        if not metadata and cid.startswith("seed"):
+            from seed_data import get_seed_datasets
+            seed_datasets = get_seed_datasets()
+            for dataset in seed_datasets:
+                if dataset["cid"] == cid:
+                    metadata = dataset
+                    break
+        
         if not metadata:
             raise HTTPException(status_code=404, detail="Dataset not found")
         
@@ -74,6 +84,18 @@ async def download_dataset(cid: str, format: str = "zip", buyer: Optional[str] =
         
         # Get the dataset file
         file_data = dataset_service.download_dataset(cid, format)
+        
+        # If seed dataset, generate demo CSV
+        if not file_data and cid.startswith("seed"):
+            import csv
+            from io import StringIO
+            csv_buffer = StringIO()
+            writer = csv.writer(csv_buffer)
+            writer.writerow(['id', 'value', 'category', 'timestamp'])
+            for i in range(10):
+                writer.writerow([i, f'demo_value_{i}', metadata.get('category', 'Demo'), f'2024-01-{i+1:02d}'])
+            file_data = csv_buffer.getvalue().encode('utf-8')
+        
         if not file_data:
             raise HTTPException(status_code=404, detail="Dataset file not found")
         

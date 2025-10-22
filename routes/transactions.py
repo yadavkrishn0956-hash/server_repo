@@ -14,6 +14,16 @@ async def initiate_purchase(request: PurchaseRequest):
     try:
         # Validate dataset exists
         metadata = ipfs.get_metadata(request.cid)
+        
+        # If not found in IPFS, check seed data
+        if not metadata and request.cid.startswith("seed"):
+            from seed_data import get_seed_datasets
+            seed_datasets = get_seed_datasets()
+            for dataset in seed_datasets:
+                if dataset["cid"] == request.cid:
+                    metadata = dataset
+                    break
+        
         if not metadata:
             raise HTTPException(status_code=404, detail="Dataset not found")
         
