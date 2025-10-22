@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from typing import Optional, List
 from datetime import datetime
+import random
 
 from models import APIResponse, DatasetMetadata, PurchaseRequest, Transaction
 from services.ipfs_mimic import ipfs
@@ -9,6 +10,103 @@ from services.blockchain_ledger import blockchain
 from config import MAX_FILE_SIZE, ALLOWED_FILE_TYPES
 
 router = APIRouter(prefix="/api", tags=["Marketplace"])
+
+# Seed data for demo
+def get_seed_datasets():
+    """Get seed datasets for demo purposes"""
+    base_time = datetime.utcnow()
+    return [
+        {
+            "cid": "seed0001" + "a" * 56,
+            "title": "Global Financial Markets Data",
+            "description": "High-quality synthetic market data including stock prices, trading volumes, and market indicators.",
+            "category": "Finance",
+            "uploader": "0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e416",
+            "price": 99.99,
+            "quality_score": 96,
+            "tags": ["stocks", "trading", "markets", "quantitative", "premium"],
+            "rows": 10000,
+            "columns": 7,
+            "file_size": 598000,
+            "timestamp": base_time.isoformat(),
+            "quality_metrics": {"completeness": 98, "consistency": 96, "accuracy": 97, "uniqueness": 94}
+        },
+        {
+            "cid": "seed0002" + "b" * 56,
+            "title": "E-Commerce Customer Behavior Dataset",
+            "description": "Comprehensive customer behavior data for e-commerce analytics.",
+            "category": "Business",
+            "uploader": "0x8f3B9C1d4E2A5F6c7D8E9F0A1B2C3D4E5F6A7B8C",
+            "price": 49.99,
+            "quality_score": 88,
+            "tags": ["ecommerce", "customers", "analytics", "behavior"],
+            "rows": 5000,
+            "columns": 12,
+            "file_size": 450000,
+            "timestamp": base_time.isoformat(),
+            "quality_metrics": {"completeness": 90, "consistency": 88, "accuracy": 89, "uniqueness": 85}
+        },
+        {
+            "cid": "seed0003" + "c" * 56,
+            "title": "Medical Patient Records (Synthetic)",
+            "description": "Synthetic patient health records for medical research and ML model training.",
+            "category": "Medical",
+            "uploader": "0x1A2B3C4D5E6F7A8B9C0D1E2F3A4B5C6D7E8F9A0B",
+            "price": 149.99,
+            "quality_score": 94,
+            "tags": ["medical", "healthcare", "patients", "research", "premium"],
+            "rows": 8000,
+            "columns": 15,
+            "file_size": 1200000,
+            "timestamp": base_time.isoformat(),
+            "quality_metrics": {"completeness": 96, "consistency": 94, "accuracy": 95, "uniqueness": 92}
+        },
+        {
+            "cid": "seed0004" + "d" * 56,
+            "title": "Retail Sales Transaction Data",
+            "description": "Synthetic retail sales data with product information and customer demographics.",
+            "category": "Retail",
+            "uploader": "0x9E8D7C6B5A4F3E2D1C0B9A8F7E6D5C4B3A2F1E0D",
+            "price": 29.99,
+            "quality_score": 85,
+            "tags": ["retail", "sales", "transactions", "products"],
+            "rows": 15000,
+            "columns": 8,
+            "file_size": 890000,
+            "timestamp": base_time.isoformat(),
+            "quality_metrics": {"completeness": 87, "consistency": 85, "accuracy": 86, "uniqueness": 82}
+        },
+        {
+            "cid": "seed0005" + "e" * 56,
+            "title": "Social Media Engagement Metrics",
+            "description": "Synthetic social media engagement data including likes, shares, and comments.",
+            "category": "Business",
+            "uploader": "0x2F3E4D5C6B7A8F9E0D1C2B3A4F5E6D7C8B9A0F1E",
+            "price": 0,
+            "quality_score": 78,
+            "tags": ["social", "engagement", "metrics", "free"],
+            "rows": 20000,
+            "columns": 10,
+            "file_size": 1100000,
+            "timestamp": base_time.isoformat(),
+            "quality_metrics": {"completeness": 80, "consistency": 78, "accuracy": 79, "uniqueness": 75}
+        },
+        {
+            "cid": "seed0006" + "f" * 56,
+            "title": "Weather and Climate Dataset",
+            "description": "Comprehensive weather data with temperature, precipitation, and atmospheric conditions.",
+            "category": "Science",
+            "uploader": "0x3A4B5C6D7E8F9A0B1C2D3E4F5A6B7C8D9E0F1A2B",
+            "price": 0,
+            "quality_score": 92,
+            "tags": ["weather", "climate", "science", "free"],
+            "rows": 50000,
+            "columns": 6,
+            "file_size": 2500000,
+            "timestamp": base_time.isoformat(),
+            "quality_metrics": {"completeness": 94, "consistency": 92, "accuracy": 93, "uniqueness": 90}
+        }
+    ]
 
 @router.post("/upload", response_model=APIResponse)
 async def upload_dataset(
@@ -102,7 +200,6 @@ async def list_datasets(
         
         # If no datasets exist, use seed data
         if not all_cids:
-            from seed_data import get_seed_datasets
             seed_datasets = get_seed_datasets()
             
             # Apply filters to seed data
@@ -205,7 +302,6 @@ async def get_dataset_metadata(cid: str):
         
         # If not found in IPFS, check seed data
         if not metadata and cid.startswith("seed"):
-            from seed_data import get_seed_datasets
             seed_datasets = get_seed_datasets()
             for dataset in seed_datasets:
                 if dataset["cid"] == cid:

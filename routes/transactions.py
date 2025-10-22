@@ -17,7 +17,10 @@ async def initiate_purchase(request: PurchaseRequest):
         
         # If not found in IPFS, check seed data
         if not metadata and request.cid.startswith("seed"):
-            from seed_data import get_seed_datasets
+            # Import from marketplace route
+            import sys
+            sys.path.append('..')
+            from routes.marketplace import get_seed_datasets
             seed_datasets = get_seed_datasets()
             for dataset in seed_datasets:
                 if dataset["cid"] == request.cid:

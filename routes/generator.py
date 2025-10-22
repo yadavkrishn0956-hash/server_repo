@@ -64,7 +64,10 @@ async def download_dataset(cid: str, format: str = "zip", buyer: Optional[str] =
         
         # If not found in IPFS, check seed data
         if not metadata and cid.startswith("seed"):
-            from seed_data import get_seed_datasets
+            # Import from marketplace route
+            import sys
+            sys.path.append('..')
+            from routes.marketplace import get_seed_datasets
             seed_datasets = get_seed_datasets()
             for dataset in seed_datasets:
                 if dataset["cid"] == cid:
