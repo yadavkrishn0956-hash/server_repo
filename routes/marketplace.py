@@ -198,8 +198,8 @@ async def list_datasets(
         # Get all CIDs
         all_cids = ipfs.list_all_cids()
         
-        # If no datasets exist, use seed data
-        if not all_cids:
+        # Always use seed data for now (Vercel doesn't persist files)
+        if True:  # Changed from: if not all_cids
             seed_datasets = get_seed_datasets()
             
             # Apply filters to seed data
