@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Optional
+from pydantic import BaseModel
 
 from models import APIResponse, PurchaseRequest, Transaction
 from services.blockchain_ledger import blockchain
@@ -66,13 +67,17 @@ async def initiate_purchase(request: PurchaseRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Purchase initiation failed: {str(e)}")
 
+class PaymentRequest(BaseModel):
+    tx_id: str
+    payment_amount: float
+
 @router.post("/pay", response_model=APIResponse)
-async def complete_payment(tx_id: str, payment_amount: float):
+async def complete_payment(request: PaymentRequest):
     """Complete payment and release escrow"""
     
     try:
         # Get transaction
-        transaction = blockchain.get_transaction(tx_id)
+        transaction = blockchain.get_transaction(request.tx_id)
         if not transaction:
             raise HTTPException(status_code=404, detail="Transaction not found")
         
@@ -83,15 +88,15 @@ async def complete_payment(tx_id: str, payment_amount: float):
             )
         
         # Complete the transaction
-        success = blockchain.complete_transaction(tx_id, payment_amount)
+        success = blockchain.complete_transaction(request.tx_id, request.payment_amount)
         
         if not success:
             # If payment verification failed, mark transaction as failed
-            blockchain.fail_transaction(tx_id, "Payment verification failed")
+            blockchain.fail_transaction(request.tx_id, "Payment verification failed")
             raise HTTPException(status_code=400, detail="Payment verification failed")
         
         # Get updated transaction
-        updated_transaction = blockchain.get_transaction(tx_id)
+        updated_transaction = blockchain.get_transaction(request.tx_id)
         
         return APIResponse(
             success=True,

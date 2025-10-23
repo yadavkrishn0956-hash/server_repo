@@ -120,7 +120,13 @@ class ImageDataGenerator:
                 combined = (value1 + value2 * 0.5 + value3 * 0.25)
                 intensity = int((combined + 1) * 127.5)  # Normalize to 0-255
                 
-                img[i, j] = [intensity, (intensity + 85) % 255, (intensity + 170) % 255]
+                # Ensure values stay within uint8 bounds (0-255)
+                intensity = max(0, min(255, intensity))
+                r = intensity
+                g = (intensity + 85) % 256
+                b = (intensity + 170) % 256
+                
+                img[i, j] = [r, g, b]
         
         return img
     

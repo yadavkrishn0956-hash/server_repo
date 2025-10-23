@@ -232,65 +232,7 @@ async def list_datasets(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list datasets: {str(e)}")
 
-# Old code below - keeping for reference but not used
-def _list_datasets_old():
-            metadata = ipfs.get_metadata(cid)
-            if not metadata:
-                continue
-            
-            # Apply filters
-            if category and metadata.get("category", "").lower() != category.lower():
-                continue
-            
-            if min_quality and metadata.get("quality_score", 0) < min_quality:
-                continue
-            
-            if max_price is not None and metadata.get("price", 0) > max_price:
-                continue
-            
-            if search:
-                search_text = f"{metadata.get('title', '')} {metadata.get('description', '')} {' '.join(metadata.get('tags', []))}".lower()
-                if search.lower() not in search_text:
-                    continue
-            
-            # Create dataset info
-            dataset_info = {
-                "cid": cid,
-                "title": metadata.get("title", "Untitled Dataset"),
-                "description": metadata.get("description", ""),
-                "category": metadata.get("category", "Unknown"),
-                "uploader": metadata.get("uploader", "Anonymous"),
-                "timestamp": metadata.get("timestamp", ""),
-                "quality_score": metadata.get("quality_score", 0),
-                "price": metadata.get("price", 0),
-                "file_size": metadata.get("file_size", 0),
-                "tags": metadata.get("tags", []),
-                "quality_color": quality_service.get_quality_indicator_color(metadata.get("quality_score", 0))
-            }
-            
-            datasets.append(dataset_info)
-        
-        # Sort by: free datasets first, then by quality score (descending), then by timestamp (newest first)
-        datasets.sort(key=lambda x: (x["price"] != 0, -x["quality_score"], x["timestamp"]), reverse=False)
-        
-        # Apply pagination
-        total_count = len(datasets)
-        paginated_datasets = datasets[offset:offset + limit]
-        
-        return APIResponse(
-            success=True,
-            message=f"Found {total_count} datasets",
-            data={
-                "datasets": paginated_datasets,
-                "total_count": total_count,
-                "limit": limit,
-                "offset": offset,
-                "has_more": offset + limit < total_count
-            }
-        )
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list datasets: {str(e)}")
+
 
 @router.get("/metadata/{cid}", response_model=APIResponse)
 async def get_dataset_metadata(cid: str):
